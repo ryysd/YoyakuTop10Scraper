@@ -55,6 +55,7 @@ module YoyakutoptenScraper
       @video_url        = video_url
       @bonus_id         = bonus_id
       @bonus_url        = bonus_url
+      @website_url      = (YoyakutoptenScraper.make_absolute_url ("#{YoyakutoptenScraper::PC_PREFIX}/#{@app_id}"))
     end
 
     def update

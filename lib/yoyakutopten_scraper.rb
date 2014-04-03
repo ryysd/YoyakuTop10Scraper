@@ -4,12 +4,47 @@ require 'nokogiri'
 
 module YoyakutoptenScraper
   HOST = 'https://yoyaku-top10.jp'.freeze
-  PREFIX = 'u/a'
+  PC_PREFIX = 'u/a'
+  MOBILE_PREFIX = 'sp/r'
   ANDROID_USER_AGENT = 'Mozilla/5.0 (Linux; U; Android 1.6; ja-jp; IS01 Build/S3082) AppleWebKit/528.5+ (KHTML, like Gecko) Version/3.1.2 Mobile Safari/525.20.1'
   IOS_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A403 Safari/8536.25'
 
   def self.make_absolute_url(url)
     "#{YoyakutoptenScraper::HOST}/#{url}"
+  end
+
+  class Bonus
+    def initialize(bonus_id:)
+      @bonus_id = bonus_id
+    end
+
+    def parse(html)
+      img = ((html.css '.app_detail_bonus_imgArea').first.css 'img').first
+      description = (html.css '.app_description').first
+
+      detail = (html.css '.reserv_detail').first
+      reserved_num = (detail.css '.reserv_detail_num').first
+      current_reserved = (reserved_num.css 'li')[1]
+      max_reserved     = (reserved_num.css 'li')[2]
+
+      {
+	img_url: (img.get_attribute 'src'),
+	description: description.text,
+	current_reserved: current_reserved.text,
+	max_reserved: max_reserved.text
+      }
+    end
+
+    def update
+      query = "#{YoyakutoptenScraper::HOST}/#{YoyakutoptenScraper::MOBILE_PREFIX}/#{@bonus_id}/bonus"
+      request = Typhoeus::Request.new query,
+	method: 'get',
+	headers: {:"User-Agent" => YoyakutoptenScraper::ANDROID_USER_AGENT},
+	followlocation: true
+
+      response = request.run
+      self.parse (Nokogiri::HTML.parse response.body)
+    end
   end
 
   class App
@@ -18,6 +53,58 @@ module YoyakutoptenScraper
     end
 
     def parse(html)
+      detail = (html.css '.app_detail_box').first
+      icon = (detail.css '.app_detail_img').first
+      title = (detail.css 'h1').first
+      publisher = (detail.css '.app_company').first
+      release = ((detail.css '.app_released').first.css 'dd').last
+      reservation = (detail.css '.app_booking').first
+      current_reserved = (reservation.css 'li')[1]
+      max_reserved = (reservation.css 'li')[2]
+
+      video = (html.css '.app_detail_movie').first
+
+      unless video.nil?
+        video_frame = (video.css 'iframe').first
+	video_url = video_frame.get_attribute 'src'
+      end
+
+      screenshot_container = (html.css '.gallery_wrap').first
+      screenshots = screenshot_container.css '.item'
+      screenshot_urls = screenshots.map do |ss| 
+	rel_url = (ss.css 'img').first.get_attribute 'src'
+	YoyakutoptenScraper.make_absolute_url rel_url
+      end
+
+      description = (html.css '.app_description').first
+
+      bonus_detail = (html.css '.bonus_detail').first
+      unless bonus_detail.nil?
+	bonus = ((bonus_detail.css '.btn_bounus').first.css 'a').first
+
+        bonus_rel_url = bonus.get_attribute 'href'
+        bonus_rel_url.match %r!/[a-zA-Z]+/[a-zA-Z]+/(\w+)!
+        bonus_url = YoyakutoptenScraper.make_absolute_url bonus_rel_url
+        bonus_id = $1
+      else
+        bonus_id = ''
+        bonus_url = ''
+      end
+
+      {
+        title: title.text,
+	icon: (YoyakutoptenScraper.make_absolute_url (icon.get_attribute 'src')),
+        publisher: publisher.text,
+        release: release.text,
+	current_reserved: current_reserved.text,
+	max_reserved: max_reserved.text,
+        screenshot_urls: screenshot_urls,
+        description: description.text,
+	video_url: video_url
+      }
+    end
+
+    def _parse(html)
       screenshots = html.css '.app_detail_gallery'
       video       = (html.css '.app_detail_movie').first
       video_frame = (video.css 'iframe').first
@@ -44,28 +131,31 @@ module YoyakutoptenScraper
       bonus = (html.css '.bonus_btnArea').first
 
       {
-	title:            title.text,
-	detail_url:       "#{YoyakutoptenScraper::HOST}/#{YoyakutoptenScraper::PREFIX}/#{@app_id}",
-	icon:             "#{YoyakutoptenScraper::HOST}/#{icon_rel_url}",
-	app_id:           @app_id,
-	release:          plan_detail.first.text,
-	current_reserved: current_reserved,
-	max_reserved:     max_reserved,
-	publisher:        publisher.text,
-	description:      description.text,
-	screenshot_urls: screenshot_urls,
-	video_url:       (video_frame.get_attribute 'src'),
-	price:           price.text,
-	os_type:         os_type.text,
-	has_bonus:       !bonus.nil?
+        title:            title.text,
+        detail_url:       "#{YoyakutoptenScraper::HOST}/#{YoyakutoptenScraper::PREFIX}/#{@app_id}",
+        icon:             "#{YoyakutoptenScraper::HOST}/#{icon_rel_url}",
+        app_id:           @app_id,
+        release:          plan_detail.first.text,
+        current_reserved: current_reserved,
+        max_reserved:     max_reserved,
+        publisher:        publisher.text,
+        description:      description.text,
+        screenshot_urls: screenshot_urls,
+        video_url:       (video_frame.get_attribute 'src'),
+        price:           price.text,
+        os_type:         os_type.text,
+        has_bonus:       !bonus.nil?
       }
     end
 
     def update
-      query = "#{YoyakutoptenScraper::HOST}/#{YoyakutoptenScraper::PREFIX}/#{@app_id}"
-      response = Typhoeus.get query
-      result = self.parse (Nokogiri::HTML.parse response.body)
-      p result
+      query = "#{YoyakutoptenScraper::HOST}/#{YoyakutoptenScraper::PC_PREFIX}/#{@app_id}"
+      request = Typhoeus::Request.new query,
+	method: 'get',
+	headers: {:"User-Agent" => YoyakutoptenScraper::ANDROID_USER_AGENT},
+	followlocation: true
+      response = request.run
+      self.parse (Nokogiri::HTML.parse response.body)
     end
   end
 

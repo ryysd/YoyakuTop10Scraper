@@ -8,14 +8,16 @@ module YoyakutoptenScraper
   MOBILE_PREFIX = 'sp/r'
   ANDROID_USER_AGENT = 'Mozilla/5.0 (Linux; U; Android 1.6; ja-jp; IS01 Build/S3082) AppleWebKit/528.5+ (KHTML, like Gecko) Version/3.1.2 Mobile Safari/525.20.1'
   IOS_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A403 Safari/8536.25'
+  USER_AGENTS = {ios: IOS_USER_AGENT, android: ANDROID_USER_AGENT}
 
   def self.make_absolute_url(url)
     "#{YoyakutoptenScraper::HOST}/#{url}"
   end
 
   class Bonus
-    def initialize(bonus_id:)
+    def initialize(bonus_id:, os_type:)
       @bonus_id = bonus_id
+      @os_type = os_type
     end
 
     def parse(html)
@@ -37,9 +39,10 @@ module YoyakutoptenScraper
 
     def update
       query = "#{YoyakutoptenScraper::HOST}/#{YoyakutoptenScraper::MOBILE_PREFIX}/#{@bonus_id}/bonus"
+      user_agents = YoyakutoptenScraper::USER_AGENTS[@os_type]
       request = Typhoeus::Request.new query,
 	method: 'get',
-	headers: {:"User-Agent" => YoyakutoptenScraper::ANDROID_USER_AGENT},
+	headers: {:"User-Agent" => user_agents},
 	followlocation: true
 
       response = request.run
@@ -48,8 +51,9 @@ module YoyakutoptenScraper
   end
 
   class App
-    def initialize(app_id:)
+    def initialize(app_id:, os_type:)
       @app_id = app_id
+      @os_type = os_type
     end
 
     def parse(html)
@@ -104,55 +108,12 @@ module YoyakutoptenScraper
       }
     end
 
-    def _parse(html)
-      screenshots = html.css '.app_detail_gallery'
-      video       = (html.css '.app_detail_movie').first
-      video_frame = (video.css 'iframe').first
-      description = (html.css '.app_detail_text').first
-      os_type     = (html.css '.support_app').first.css 'p'
-      plan        = (html.css '.app_detail_plan').first
-      plan_detail = plan.css 'dd'
-
-      screenshot_urls = (screenshots.css 'li').map{|ss| (ss.css 'img').first.get_attribute 'src'}
-      screenshot_urls = screenshot_urls.map{|ss| "#{YoyakutoptenScraper::HOST}/#{ss}"}
-
-      header    = (html.css '.app_detail_box').first
-      title     = (header.css 'h2').first
-      icon      = (header.css 'img').first
-      publisher = (header.css '.app_detail_company').first
-      price     = (header.css '.app_detail_price').first.css 'dd'
-
-      icon_rel_url = icon.get_attribute 'src'
-
-      plan_detail.last.text.match %r!([0-9|,]+)/([0-9|,]+)!
-      current_reserved = $1
-      max_reserved     = $2
-
-      bonus = (html.css '.bonus_btnArea').first
-
-      {
-        title:            title.text,
-        detail_url:       "#{YoyakutoptenScraper::HOST}/#{YoyakutoptenScraper::PREFIX}/#{@app_id}",
-        icon:             "#{YoyakutoptenScraper::HOST}/#{icon_rel_url}",
-        app_id:           @app_id,
-        release:          plan_detail.first.text,
-        current_reserved: current_reserved,
-        max_reserved:     max_reserved,
-        publisher:        publisher.text,
-        description:      description.text,
-        screenshot_urls: screenshot_urls,
-        video_url:       (video_frame.get_attribute 'src'),
-        price:           price.text,
-        os_type:         os_type.text,
-        has_bonus:       !bonus.nil?
-      }
-    end
-
     def update
       query = "#{YoyakutoptenScraper::HOST}/#{YoyakutoptenScraper::PC_PREFIX}/#{@app_id}"
+      user_agents = YoyakutoptenScraper::USER_AGENTS[@os_type]
       request = Typhoeus::Request.new query,
 	method: 'get',
-	headers: {:"User-Agent" => YoyakutoptenScraper::ANDROID_USER_AGENT},
+	headers: {:"User-Agent" => user_agents},
 	followlocation: true
       response = request.run
       self.parse (Nokogiri::HTML.parse response.body)
@@ -210,15 +171,17 @@ module YoyakutoptenScraper
 	  release: release.text,
 	  bonus_id: bonus_id, 
 	  bonus_url: bonus_url,
+	  os_type: @os_type
 	}
       end
     end
 
     def update
       query = "#{YoyakutoptenScraper::HOST}/pc/r/#{@os_type}/#{@feed}"
+      user_agents = YoyakutoptenScraper::USER_AGENTS[@os_type]
       request = Typhoeus::Request.new query,
 	method: 'get',
-	headers: {:"User-Agent" => YoyakutoptenScraper::ANDROID_USER_AGENT},
+	headers: {:"User-Agent" => user_agents},
 	followlocation: true
 
       response = request.run

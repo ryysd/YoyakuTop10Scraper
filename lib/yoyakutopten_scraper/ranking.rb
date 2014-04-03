@@ -18,7 +18,7 @@ module YoyakutoptenScraper
 	banner_img = (banner.css 'img').first
 
 	info = (app.css '.bg_rank_summary').first
-	release = ((info.css '.rank_released').first.css 'li').last
+	#release = ((info.css '.rank_released').first.css 'li').last
 
 	detail_rel_url = banner.get_attribute 'href'
         detail_rel_url.match %r!/[a-zA-Z]+/[a-zA-Z]+/(\w+)!
@@ -47,7 +47,7 @@ module YoyakutoptenScraper
 	  detail_url:      detail_url,
 	  banner_img_url:  banner_url,
 	  app_id:          app_id,
-	  release:         release.text,
+	  #release:         release.text,
 	  bonus_id:        bonus_id,
 	  bonus_url:       bonus_url,
 	  os_type:         @os_type
@@ -56,7 +56,7 @@ module YoyakutoptenScraper
     end
 
     def update
-      query = "#{YoyakutoptenScraper::HOST}/pc/r/#{@os_type}/#{@feed}"
+      query = "#{YoyakutoptenScraper::HOST}/#{YoyakutoptenScraper::MOBILE_PREFIX}/#{@feed}"
       user_agents = YoyakutoptenScraper::USER_AGENTS[@os_type]
       request = Typhoeus::Request.new query,
 	method: 'get',

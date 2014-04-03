@@ -1,6 +1,6 @@
 require 'yoyakutopten_scraper'
 
-ranking = YoyakutoptenScraper::Ranking.new os_type: :ios, feed: :total
+ranking = YoyakutoptenScraper::Ranking.new os_type: :ios, feed: :new
 ranking.update
 
 p ranking.results

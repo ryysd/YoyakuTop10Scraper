@@ -12,7 +12,7 @@ module YoyakutoptenScraper
       apps = html.css '.rank_content'
 
       @results = apps.map do |app|
-	title = (app.css '.rank_title').first
+	title = (app.css '.rank_title', '.new_title').first
 	price = (app.css '.rank_price').first
 	banner = ((app.css '.rank_bnr').first.css 'a').first
 	banner_img = (banner.css 'img').first

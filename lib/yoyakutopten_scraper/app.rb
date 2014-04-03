@@ -53,6 +53,8 @@ module YoyakutoptenScraper
       @screenshot_urls  = screenshot_urls
       @description      = description.text
       @video_url        = video_url
+      @bonus_id         = bonus_id
+      @bonus_url        = bonus_url
     end
 
     def update

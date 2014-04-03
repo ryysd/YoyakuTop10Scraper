@@ -1,5 +1,7 @@
 module YoyakutoptenScraper
   class App
+    attr_reader :title, :icon, :publisher, :release, :current_reserved, :max_reserved,
+      :screenshot_urls, :description, :video_url, :bonus_id, :bonus_url, :website_url
     def initialize(app_id:, os_type:)
       @app_id = app_id
       @os_type = os_type

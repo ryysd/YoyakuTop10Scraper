@@ -29,12 +29,10 @@ module YoyakutoptenScraper
       current_reserved = (reserved_num.css 'li')[1]
       max_reserved     = (reserved_num.css 'li')[2]
 
-      {
-	img_url: (img.get_attribute 'src'),
-	description: description.text,
-	current_reserved: current_reserved.text,
-	max_reserved: max_reserved.text
-      }
+      @img_url          = (img.get_attribute 'src')
+      @description      = description.text
+      @current_reserved = current_reserved.text
+      @max_reserved     = max_reserved.text
     end
 
     def update
@@ -95,17 +93,15 @@ module YoyakutoptenScraper
         bonus_url = ''
       end
 
-      {
-        title: title.text,
-	icon: (YoyakutoptenScraper.make_absolute_url (icon.get_attribute 'src')),
-        publisher: publisher.text,
-        release: release.text,
-	current_reserved: current_reserved.text,
-	max_reserved: max_reserved.text,
-        screenshot_urls: screenshot_urls,
-        description: description.text,
-	video_url: video_url
-      }
+      @title            = title.text
+      @icon             = (YoyakutoptenScraper.make_absolute_url (icon.get_attribute 'src'))
+      @publisher        = publisher.text
+      @release          = release.text
+      @current_reserved = current_reserved.text
+      @max_reserved     = max_reserved.text
+      @screenshot_urls  = screenshot_urls
+      @description      = description.text
+      @video_url        = video_url
     end
 
     def update
@@ -122,7 +118,7 @@ module YoyakutoptenScraper
 
   class Ranking
     TYPE = [:daily, :total, :new]
-    attr_accessor :feed, :os_type
+    attr_accessor :feed, :os_type, :results
 
     def initialize(feed:, os_type:, options: {})
       @feed = feed
@@ -132,7 +128,7 @@ module YoyakutoptenScraper
     def parse(html)
       apps = html.css '.rank_content'
 
-      apps.map do |app|
+      @results = apps.map do |app|
 	title = (app.css '.rank_title').first
 	price = (app.css '.rank_price').first
 	banner = ((app.css '.rank_bnr').first.css 'a').first
@@ -163,15 +159,15 @@ module YoyakutoptenScraper
 	banner_url = YoyakutoptenScraper.make_absolute_url banner_rel_url
 
 	{
-	  title: title.text,
-	  price: price.text,
-          detail_url: detail_url,
-	  banner_img_url: banner_url,
-	  app_id: app_id,
-	  release: release.text,
-	  bonus_id: bonus_id, 
-	  bonus_url: bonus_url,
-	  os_type: @os_type
+	  title:           title.text,
+	  price:           (price.text == 'FREE' ? 0 : price.text),
+	  detail_url:      detail_url,
+	  banner_img_url:  banner_url,
+	  app_id:          app_id,
+	  release:         release.text,
+	  bonus_id:        bonus_id,
+	  bonus_url:       bonus_url,
+	  os_type:         @os_type
 	}
       end
     end

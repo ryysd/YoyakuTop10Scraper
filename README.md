@@ -1,6 +1,6 @@
 # YoyakutoptenScraper
 
-TODO: Write a gem description
+scraper for https://yoyaku-top10.jp.
 
 ## Installation
 
@@ -17,8 +17,6 @@ Or install it yourself as:
     $ gem install yoyakutopten_scraper
 
 ## Usage
-
-TODO: Write usage instructions here
 
 ## Contributing
 

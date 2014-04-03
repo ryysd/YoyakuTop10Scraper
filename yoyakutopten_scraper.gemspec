@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = YoyakutoptenScraper::VERSION
   spec.authors       = ["ryysd"]
   spec.email         = ["ry.ysd01@gmail.com"]
-  spec.summary       = %q{scraper for ps://yoyaku-top10.jp.}
-  spec.description   = %q{scraper for ps://yoyaku-top10.jp.}
+  spec.summary       = %q{scraper for https://yoyaku-top10.jp.}
+  spec.description   = %q{scraper for https://yoyaku-top10.jp.}
   spec.homepage      = ""
   spec.license       = "MIT"
 

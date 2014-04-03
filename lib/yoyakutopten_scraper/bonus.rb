@@ -1,5 +1,7 @@
 module YoyakutoptenScraper
   class Bonus
+    attr_reader :img_url, :description
+
     def initialize(bonus_id:, os_type:)
       @bonus_id = bonus_id
       @os_type = os_type

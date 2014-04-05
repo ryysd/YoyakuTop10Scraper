@@ -16,7 +16,7 @@ module YoyakutoptenScraper
       current_reserved = (reserved_num.css 'li')[1]
       max_reserved     = (reserved_num.css 'li')[2]
 
-      @img_url          = (img.get_attribute 'src')
+      @img_url          = (YoyakutoptenScraper.make_absolute_url (img.get_attribute 'src'))
       @description      = description.text
       @current_reserved = current_reserved.text
       @max_reserved     = max_reserved.text

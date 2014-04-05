@@ -53,7 +53,7 @@ module YoyakutoptenScraper
       @current_reserved = current_reserved.text
       @max_reserved     = max_reserved.text
       @screenshot_urls  = screenshot_urls
-      @description      = description.text
+      @description      = description.to_html
       @video_url        = video_url
       @bonus_id         = bonus_id
       @bonus_url        = bonus_url
